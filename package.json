@@ -1,0 +1,20 @@
+{
+  "name": "portfolio",
+  "version": "1.0.0",
+  "description": "歡迎來到我的作品集！  \r 這裡整理了我在 **前端開發 (Frontend Development)** 與 **系統分析 (System Analysis)** 方面的專案。  \r 希望能讓您快速了解我的技術能力與專案經驗。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juliechen1491/portfolio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/juliechen1491/portfolio/issues"
+  },
+  "homepage": "https://github.com/juliechen1491/portfolio#readme"
+}

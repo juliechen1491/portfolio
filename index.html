@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+	<meta charset="UTF-8">
+	<title>Tool Box</title>
+	<style>
+		body {
+			font-family: 'Segoe UI', Arial, sans-serif;
+			background: linear-gradient(135deg, #e3eafc 0%, #f7f7f7 100%);
+			margin: 0;
+		}
+		.navbar {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			background: linear-gradient(90deg, #bfc3c7 0%, #e3e4e8 100%);
+			box-shadow: 0 2px 8px rgba(180,180,180,0.10);
+			padding: 0 0 0 0;
+		}
+		.nav-btn {
+			flex: 1;
+			padding: 18px 0;
+			font-size: 1.15em;
+			font-weight: bold;
+			color: #222;
+			background: none;
+			border: none;
+			cursor: pointer;
+			transition: background 0.2s, color 0.2s;
+		}
+		.nav-btn.active {
+			background: linear-gradient(90deg, #e3e4e8 0%, #bfc3c7 100%);
+			color: #2193b0;
+		}
+		.frame-area {
+			width: 100vw;
+			margin: 36px 0 0 0;
+			background: #fff;
+			border-radius: 0;
+			box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+			padding: 0;
+			min-height: 600px;
+			display: flex;
+			justify-content: center;
+			align-items: flex-start;
+		}
+		iframe {
+			width: 100vw;
+			height: 600px;
+			border: none;
+			border-radius: 0;
+			box-shadow: none;
+			background: #f7f7f7;
+			overflow: hidden;
+		}
+		h1 {
+			text-align: center;
+			color: #333;
+			margin: 32px 0 0 0;
+			font-size: 2em;
+		}
+	</style>
+</head>
+<body>
+	<div class="navbar">
+		<button class="nav-btn active" id="nav-calc" onclick="showFrame('calculator.html', this)">計算機</button>
+		<button class="nav-btn" id="nav-num" onclick="showFrame('numerology.html', this)">生命靈數計算</button>
+		<button class="nav-btn" id="nav-ans" onclick="showFrame('answer.html', this)">能量抽奬機</button>
+	</div>
+	<div class="frame-area">
+		<iframe id="main-frame" src="calculator.html"></iframe>
+	</div>
+	<script>
+		function showFrame(url, btn) {
+			document.getElementById('main-frame').src = url;
+			document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+			btn.classList.add('active');
+		}
+	</script>
+</body>
+</html>

@@ -457,7 +457,7 @@
 </head>
 <body>
     <div class="navbar">
-        <a href="/">返回首頁</a>
+        <a href="#" onclick="goHome(event)">返回首頁</a>
         <span class="title">✨ 能量抽獎機</span>
     </div>
     <div class="container">
@@ -503,6 +503,14 @@
     </div>
 
     <script>
+        function goHome(e) {
+            e.preventDefault();
+            if (window.top !== window.self) {
+                window.top.location.href = 'index.html';
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
         // 初始化變數
         let masterStart = 1;
         let masterEnd = 99;

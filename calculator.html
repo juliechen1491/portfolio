@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>計算機</title>
+    <style>
+        :root {
+            --primary-color: #2d3436;
+            --accent-color: #00b894;
+            --bg-color: #f1f2f6;
+            --text-color: #2d3436;
+            --border-color: #dfe6e9;
+            --hover-color: #00cec9;
+            --error-color: #d63031;
+            --success-color: #00b894;
+            --gradient-start: #00b894;
+            --gradient-end: #00cec9;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #636e72);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .navbar .title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .navbar a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .calc-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 38px 28px 28px 28px;
+            border: 1px solid var(--border-color);
+        }
+        .calc-display {
+            background: linear-gradient(90deg, #f5f6fa 0%, #cfd2d6 100%);
+            color: var(--primary-color);
+            font-size: 2.2em;
+            text-align: right;
+            padding: 18px 12px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            min-height: 48px;
+            letter-spacing: 2px;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px rgba(180,180,180,0.08) inset;
+            border: 1px solid var(--border-color);
+        }
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+        .btn {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            font-size: 1.3em;
+            border: none;
+            border-radius: 10px;
+            padding: 18px 0;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(0,184,148,0.10);
+        }
+        .btn:active {
+            background: linear-gradient(135deg, var(--hover-color), var(--gradient-end));
+            box-shadow: 0 1px 2px rgba(80,80,80,0.12);
+        }
+        .btn.op {
+            background: linear-gradient(135deg, #fdcb6e, #ffeaa7);
+            color: var(--primary-color);
+        }
+        .btn.eq {
+            background: linear-gradient(135deg, var(--accent-color), var(--hover-color));
+            color: #fff;
+            grid-column: span 2;
+        }
+        .btn.clear {
+            background: linear-gradient(135deg, var(--error-color), #ff7675);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="#" onclick="goHome(event)">返回首頁</a>
+        <span class="title">🧮 計算機</span>
+    </div>
+    <div class="calc-container">
+        <div id="display" class="calc-display">0</div>
+        <div class="calc-buttons">
+            <button class="btn clear" onclick="clearDisplay()">C</button>
+            <button class="btn" onclick="inputValue('(')">(</button>
+            <button class="btn" onclick="inputValue(')')">)</button>
+            <button class="btn op" onclick="inputValue('/')">÷</button>
+
+            <button class="btn" onclick="inputValue('7')">7</button>
+            <button class="btn" onclick="inputValue('8')">8</button>
+            <button class="btn" onclick="inputValue('9')">9</button>
+            <button class="btn op" onclick="inputValue('*')">×</button>
+
+            <button class="btn" onclick="inputValue('4')">4</button>
+            <button class="btn" onclick="inputValue('5')">5</button>
+            <button class="btn" onclick="inputValue('6')">6</button>
+            <button class="btn op" onclick="inputValue('-')">−</button>
+
+            <button class="btn" onclick="inputValue('1')">1</button>
+            <button class="btn" onclick="inputValue('2')">2</button>
+            <button class="btn" onclick="inputValue('3')">3</button>
+            <button class="btn op" onclick="inputValue('+')">＋</button>
+
+            <button class="btn" onclick="inputValue('0')">0</button>
+            <button class="btn" onclick="inputValue('.')">.</button>
+            <button class="btn eq" onclick="calculate()">＝</button>
+        </div>
+    </div>
+    <script>
+        function goHome(e) {
+            e.preventDefault();
+            if (window.top !== window.self) {
+                window.top.location.href = 'index.html';
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+        let display = document.getElementById('display');
+        let current = '';
+        function inputValue(val) {
+            if (current === '' && (val === '+' || val === '-' || val === '*' || val === '/')) return;
+            if (current === '0' && val !== '.') current = '';
+            current += val;
+            display.textContent = current;
+        }
+        function clearDisplay() {
+            current = '';
+            display.textContent = '0';
+        }
+        function calculate() {
+            try {
+                let result = eval(current.replace(/÷/g, '/').replace(/×/g, '*'));
+                display.textContent = result;
+                current = result.toString();
+            } catch {
+                display.textContent = '錯誤';
+                current = '';
+            }
+        }
+    </script>
+</body>
+</html>
