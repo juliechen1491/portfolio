@@ -3,9 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <title>生命靈數計算</title>
+    <style>
+        :root {
+            --primary-color: #2d3436;
+            --accent-color: #00b894;
+            --bg-color: #f1f2f6;
+            --text-color: #2d3436;
+            --border-color: #dfe6e9;
+            --hover-color: #00cec9;
+            --error-color: #d63031;
+            --success-color: #00b894;
+            --gradient-start: #00b894;
+            --gradient-end: #00cec9;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #636e72);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .navbar .title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .navbar a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .calc-box {
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+        .date-input {
+            flex: 1;
+            padding: 12px;
+            font-size: 1.1em;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .date-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.1);
+        }
+        .calc-btn {
+            padding: 12px 24px;
+            font-size: 1.1em;
+            color: white;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .calc-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.2);
+        }
+        .result-box {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border-radius: 15px;
+            color: white;
+            margin-top: 30px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+        .result-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .life-number {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .step-box {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: left;
+        }
+        .meaning-text {
+            margin-top: 20px;
+            line-height: 1.6;
+            font-size: 1.1em;
+        }
+    </style>
 </head>
 <body>
-    <h1>生命靈數計算</h1>
-    <!-- 這裡將來會放生命靈數計算功能 -->
+    <div class="navbar">
+        <a href="#" onclick="goHome(event)">返回首頁</a>
+        <span class="title">🔮 生命靈數計算</span>
+    </div>
+    <div class="container">
+        <div class="calc-box">
+            <div class="input-group">
+                <input type="date" id="birthdate" class="date-input" required>
+                <button onclick="calculateLifeNumber()" class="calc-btn">計算生命靈數</button>
+            </div>
+            <div id="result" class="result-box">
+                <div id="steps"></div>
+                <div class="life-number" id="lifeNumber"></div>
+                <div class="meaning-text" id="meaning"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function goHome(e) {
+            e.preventDefault();
+            if (window.top !== window.self) {
+                window.top.location.href = 'index.html';
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        function sumDigits(num) {
+            return num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+        }
+
+        function calculateLifeNumber() {
+            const birthdate = document.getElementById('birthdate').value;
+            if (!birthdate) {
+                alert('請選擇出生日期！');
+                return;
+            }
+
+            const [year, month, day] = birthdate.split('-').map(Number);
+            
+            // 計算年份數字總和
+            const yearSum = sumDigits(year);
+            
+            // 計算月份數字總和
+            const monthSum = sumDigits(month);
+            
+            // 計算日期數字總和
+            const daySum = sumDigits(day);
+            
+            // 計算三個數的總和
+            const totalSum = yearSum + monthSum + daySum;
+            
+            // 計算生命靈數的完整過程
+            let steps = [];
+            let currentSum = totalSum;
+            let allNumbers = [currentSum];
+            
+            while (currentSum > 9) {
+                currentSum = sumDigits(currentSum);
+                allNumbers.push(currentSum);
+            }
+
+            // 顯示計算步驟
+            const stepsElement = document.getElementById('steps');
+            const stepsList = [
+                `年：${year} → ${year.toString().split('').join('+')} = ${yearSum}`,
+                `月：${month} → ${month.toString().split('').join('+')} = ${monthSum}`,
+                `日：${day} → ${day.toString().split('').join('+')} = ${daySum}`,
+                `第一步總和：${yearSum} + ${monthSum} + ${daySum} = ${totalSum}`
+            ];
+
+            // 添加後續的拆解步驟
+            for (let i = 0; i < allNumbers.length - 1; i++) {
+                const current = allNumbers[i];
+                const next = allNumbers[i + 1];
+                stepsList.push(`拆解步驟 ${i + 1}：${current} → ${current.toString().split('').join('+')} = ${next}`);
+            }
+
+            stepsElement.innerHTML = `
+                <div class="step-box">
+                    ${stepsList.join('<br>')}
+                </div>
+            `;
+
+            // 顯示最終結果
+            const lifeNumberElement = document.getElementById('lifeNumber');
+            const finalNumber = allNumbers[allNumbers.length - 1];
+            lifeNumberElement.textContent = finalNumber;
+            
+            // 顯示生命靈數含義
+            const meanings = {
+                1: '獨立、創造力、領導力。你具有強烈的個性和創新精神。',
+                2: '和諧、直覺、合作。你擅長與人合作，具有敏銳的洞察力。',
+                3: '表達、創意、社交。你充滿創意和表達慾望，擅長社交。',
+                4: '穩定、務實、組織。你注重細節，具有強烈的責任感。',
+                5: '自由、冒險、變化。你追求自由，喜歡嘗試新事物。',
+                6: '關懷、責任、愛。你富有同理心，願意為他人付出。',
+                7: '智慧、靈性、分析。你具有深度思考能力和精神追求。',
+                8: '力量、物質、成就。你具有商業頭腦和實現目標的能力。',
+                9: '奉獻、理想、完美。你富有同情心，追求理想和完美。'
+            };
+            
+            document.getElementById('meaning').textContent = meanings[finalNumber];
+            document.getElementById('result').classList.add('show');
+        }
+    </script>
 </body>
 </html>
