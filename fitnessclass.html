@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程管理系統 - 管理員面板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .notification { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        .notification.show { transform: translateX(0); }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+        
+        /* Sports-themed animations and effects */
+        .sport-card {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .sport-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .sport-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .sport-card:hover::before {
+            left: 100%;
+        }
+        
+        .energy-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .bounce-in {
+            animation: bounceIn 0.6s ease-out;
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .sport-icon {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .neon-border {
+            border: 2px solid transparent;
+            background: linear-gradient(white, white) padding-box,
+                        linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4) border-box;
+        }
+        
+        .energy-button {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .energy-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+        
+        .energy-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .energy-button:active::after {
+            width: 300px;
+            height: 300px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 font-sans min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="sport-icon h-10 w-10 rounded-full flex items-center justify-center text-white">
+                            <i class="fas fa-dumbbell text-lg"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-white">💪 FitnessPro 管理系統</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-white hover:text-yellow-200 pulse-animation">
+                        <i class="fas fa-bell text-lg"></i>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <div class="h-8 w-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold">
+                            A
+                        </div>
+                        <span class="text-sm font-medium text-white">管理員</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="flex">
+        <div class="w-64 bg-gradient-to-b from-purple-600 to-blue-600 shadow-xl h-screen sticky top-0">
+            <div class="p-4">
+                <nav class="space-y-3">
+                    <button onclick="showTab('users')" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium text-white rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300 active neon-border">
+                        <i class="fas fa-users mr-3 text-yellow-300"></i>👥 用戶管理
+                    </button>
+                    <button onclick="showTab('courses')" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium text-white rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300">
+                        <i class="fas fa-dumbbell mr-3 text-orange-300"></i>🏋️ 課程管理
+                    </button>
+                    <button onclick="showTab('tickets')" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium text-white rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300">
+                        <i class="fas fa-ticket-alt mr-3 text-green-300"></i>🎫 票券管理
+                    </button>
+                    <button onclick="showTab('attendance')" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium text-white rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300">
+                        <i class="fas fa-clipboard-check mr-3 text-blue-300"></i>✅ 出席管理
+                    </button>
+                    <button onclick="showTab('calendar')" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium text-white rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300">
+                        <i class="fas fa-calendar mr-3 text-pink-300"></i>📅 行事曆
+                    </button>
+                    <button onclick="showTab('makeup')" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium text-white rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300">
+                        <i class="fas fa-redo mr-3 text-cyan-300"></i>🔄 補課管理
+                    </button>
+                    <button onclick="showTab('transfer')" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium text-white rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300">
+                        <i class="fas fa-exchange-alt mr-3 text-red-300"></i>🔄 轉讓管理
+                    </button>
+                    <button onclick="showTab('payment')" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium text-white rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300">
+                        <i class="fas fa-credit-card mr-3 text-emerald-300"></i>💳 付款管理
+                    </button>
+                    <button onclick="showTab('notifications')" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium text-white rounded-xl hover:bg-white hover:bg-opacity-20 transition-all duration-300">
+                        <i class="fas fa-bell mr-3 text-violet-300"></i>🔔 通知設定
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-6">
+            <!-- Users Tab -->
+            <div id="users" class="tab-content active">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-900">用戶管理</h2>
+                        <button onclick="openModal('createUserModal')" class="energy-button text-white px-6 py-3 rounded-xl font-bold shadow-lg">
+                            <i class="fas fa-plus mr-2"></i>🚀 新增用戶
+                        </button>
+                    </div>
+                </div>
+
+                <!-- User List Table -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用戶</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">角色</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教練類型</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">王</div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">王小明</div>
+                                            <div class="text-sm text-gray-500">wang@example.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <select class="text-sm border-gray-300 rounded-md" onchange="updateUserRole(this)">
+                                        <option value="student">學生</option>
+                                        <option value="coach" selected>教練</option>
+                                        <option value="admin">管理員</option>
+                                    </select>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">學校教練</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">活躍</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button onclick="editUser(1)" class="text-blue-600 hover:text-blue-900 mr-3">編輯</button>
+                                    <button onclick="deleteUser(1)" class="text-red-600 hover:text-red-900">刪除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="h-10 w-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-medium">李</div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">李美華</div>
+                                            <div class="text-sm text-gray-500">li@example.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <select class="text-sm border-gray-300 rounded-md" onchange="updateUserRole(this)">
+                                        <option value="student" selected>學生</option>
+                                        <option value="coach">教練</option>
+                                        <option value="admin">管理員</option>
+                                    </select>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm text-gray-500">-</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">活躍</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button onclick="editUser(2)" class="text-blue-600 hover:text-blue-900 mr-3">編輯</button>
+                                    <button onclick="deleteUser(2)" class="text-red-600 hover:text-red-900">刪除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Courses Tab -->
+            <div id="courses" class="tab-content">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-900">課程管理</h2>
+                        <button onclick="openModal('createCourseModal')" class="energy-button text-white px-6 py-3 rounded-xl font-bold shadow-lg">
+                            <i class="fas fa-plus mr-2"></i>🚀 新增課程
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Course Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="sport-card bg-white rounded-2xl shadow-xl overflow-hidden bounce-in">
+                        <div class="h-48 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 relative">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <i class="fas fa-spa text-6xl text-white opacity-30"></i>
+                            </div>
+                            <div class="absolute top-4 right-4 bg-white bg-opacity-20 rounded-full p-2">
+                                <span class="text-white text-xs font-bold">🧘‍♀️</span>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">🧘‍♀️ 瑜珈基礎班</h3>
+                            <p class="text-gray-600 text-sm mb-4">適合初學者的瑜珈課程，學習基本體位法和呼吸技巧。</p>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">📚 12 堂課</span>
+                                <span class="text-xl font-bold text-pink-600">NT$ 3,600</span>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <div class="h-10 w-10 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold">王</div>
+                                <span class="ml-3 text-sm font-medium text-gray-700">王美麗 教練 ⭐</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="viewCourse(1)" class="flex-1 energy-button text-white py-3 px-4 rounded-xl text-sm font-bold">查看詳情</button>
+                                <button onclick="editCourse(1)" class="bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-700 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300">編輯</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sport-card bg-white rounded-2xl shadow-xl overflow-hidden bounce-in">
+                        <div class="h-48 bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 relative">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <i class="fas fa-dumbbell text-6xl text-white opacity-30"></i>
+                            </div>
+                            <div class="absolute top-4 right-4 bg-white bg-opacity-20 rounded-full p-2">
+                                <span class="text-white text-xs font-bold">💪</span>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">💪 TRX 懸吊訓練</h3>
+                            <p class="text-gray-600 text-sm mb-4">利用懸吊繩進行全身肌力訓練，提升核心穩定度。</p>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">🔥 10 堂課</span>
+                                <span class="text-xl font-bold text-orange-600">NT$ 4,000</span>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <div class="h-10 w-10 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex items-center justify-center text-white text-sm font-bold">陳</div>
+                                <span class="ml-3 text-sm font-medium text-gray-700">陳教練 💪</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="viewCourse(2)" class="flex-1 energy-button text-white py-3 px-4 rounded-xl text-sm font-bold">查看詳情</button>
+                                <button onclick="editCourse(2)" class="bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-700 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300">編輯</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sport-card bg-white rounded-2xl shadow-xl overflow-hidden bounce-in">
+                        <div class="h-48 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-600 relative">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <i class="fas fa-bicycle text-6xl text-white opacity-30"></i>
+                            </div>
+                            <div class="absolute top-4 right-4 bg-white bg-opacity-20 rounded-full p-2">
+                                <span class="text-white text-xs font-bold">🚴‍♂️</span>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">🚴‍♂️ 飛輪有氧</h3>
+                            <p class="text-gray-600 text-sm mb-4">高強度飛輪課程，燃燒卡路里，提升心肺功能。</p>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">⚡ 8 堂課</span>
+                                <span class="text-xl font-bold text-blue-600">NT$ 2,800</span>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <div class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500 flex items-center justify-center text-white text-sm font-bold">李</div>
+                                <span class="ml-3 text-sm font-medium text-gray-700">李強 教練 ⚡</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="viewCourse(3)" class="flex-1 energy-button text-white py-3 px-4 rounded-xl text-sm font-bold">查看詳情</button>
+                                <button onclick="editCourse(3)" class="bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-700 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300">編輯</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tickets Tab -->
+            <div id="tickets" class="tab-content">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">票券管理</h2>
+                </div>
+
+                <!-- Ticket Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="sport-card bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-xl p-6 text-white">
+                        <div class="flex items-center">
+                            <div class="p-4 rounded-full bg-white bg-opacity-20 pulse-animation">
+                                <i class="fas fa-ticket-alt text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-blue-100">🎫 總票券數</p>
+                                <p class="text-3xl font-bold">1,234</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sport-card bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-xl p-6 text-white">
+                        <div class="flex items-center">
+                            <div class="p-4 rounded-full bg-white bg-opacity-20 pulse-animation">
+                                <i class="fas fa-check-circle text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-green-100">✅ 已使用</p>
+                                <p class="text-3xl font-bold">856</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sport-card bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl shadow-xl p-6 text-white">
+                        <div class="flex items-center">
+                            <div class="p-4 rounded-full bg-white bg-opacity-20 pulse-animation">
+                                <i class="fas fa-clock text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-yellow-100">⏰ 剩餘</p>
+                                <p class="text-3xl font-bold">378</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sport-card bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl shadow-xl p-6 text-white">
+                        <div class="flex items-center">
+                            <div class="p-4 rounded-full bg-white bg-opacity-20 pulse-animation">
+                                <i class="fas fa-times-circle text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-red-100">❌ 已過期</p>
+                                <p class="text-3xl font-bold">45</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voucher Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-pink-500">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">瑜珈基礎班</h3>
+                                <p class="text-sm text-gray-500">票券 ID: #TK001234</p>
+                                <div class="flex items-center mt-2">
+                                    <div class="h-6 w-6 rounded-full bg-purple-500 flex items-center justify-center text-white text-xs font-medium">李</div>
+                                    <span class="ml-2 text-sm font-medium text-gray-700">李美華</span>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">有效</span>
+                        </div>
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                                <span>剩餘堂數</span>
+                                <span>8 / 12</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-pink-600 h-2 rounded-full" style="width: 67%"></div>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <p>購買日期: 2024-03-01</p>
+                            <p>到期日: 2024-06-30</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">TRX 懸吊訓練</h3>
+                                <p class="text-sm text-gray-500">票券 ID: #TK001235</p>
+                                <div class="flex items-center mt-2">
+                                    <div class="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">張</div>
+                                    <span class="ml-2 text-sm font-medium text-gray-700">張小華</span>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">有效</span>
+                        </div>
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                                <span>剩餘堂數</span>
+                                <span>7 / 10</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-orange-600 h-2 rounded-full" style="width: 70%"></div>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <p>購買日期: 2024-02-15</p>
+                            <p>到期日: 2024-07-15</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">飛輪有氧</h3>
+                                <p class="text-sm text-gray-500">票券 ID: #TK001236</p>
+                                <div class="flex items-center mt-2">
+                                    <div class="h-6 w-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-medium">王</div>
+                                    <span class="ml-2 text-sm font-medium text-gray-700">王大明</span>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">有效</span>
+                        </div>
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                                <span>剩餘堂數</span>
+                                <span>5 / 8</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 62.5%"></div>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <p>購買日期: 2024-03-10</p>
+                            <p>到期日: 2024-05-10</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ticket Usage History -->
+                <div class="mt-8 bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">票券使用記錄</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">票券ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">課程</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">使用日期</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#TK001234</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">瑜珈基礎班 - 第4堂</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-03-15 14:00</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">已使用</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#TK001235</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TRX 懸吊訓練 - 第3堂</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-03-14 16:00</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">已使用</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#TK001236</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">飛輪有氧 - 第3堂</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-03-13 18:00</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">已使用</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Tab -->
+            <div id="attendance" class="tab-content">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-900">出席管理</h2>
+                        <button onclick="openModal('checkinModal')" class="energy-button text-white px-6 py-3 rounded-xl font-bold shadow-lg">
+                            <i class="fas fa-qrcode mr-2"></i>📱 掃描簽到
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Check-in Interface -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="sport-card bg-white rounded-2xl shadow-xl p-6 neon-border">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                            <span class="text-2xl mr-2">⚡</span> 快速簽到
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">🏋️ 選擇課程</label>
+                                <select class="w-full border-2 border-purple-200 rounded-xl p-3 focus:border-purple-500 transition-all duration-300">
+                                    <option>🧘‍♀️ 瑜珈基礎班 - 第5堂 (今日 14:00)</option>
+                                    <option>💪 TRX 懸吊訓練 - 第4堂 (今日 16:00)</option>
+                                    <option>🚴‍♂️ 飛輪有氧 - 第4堂 (今日 18:00)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">👤 學生姓名</label>
+                                <input type="text" class="w-full border-2 border-purple-200 rounded-xl p-3 focus:border-purple-500 transition-all duration-300" placeholder="輸入學生姓名或ID">
+                            </div>
+                            <button onclick="manualCheckin()" class="w-full energy-button text-white py-4 px-6 rounded-xl font-bold text-lg">
+                                ✅ 手動簽到
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sport-card bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-xl p-6 text-white">
+                        <h3 class="text-xl font-bold mb-6 flex items-center">
+                            <span class="text-2xl mr-2">📊</span> 今日出席統計
+                        </h3>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium">🧘‍♀️ 瑜珈基礎班</span>
+                                    <span class="text-sm font-bold bg-white bg-opacity-20 px-2 py-1 rounded-full">8/10 人</span>
+                                </div>
+                                <div class="w-full bg-white bg-opacity-20 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-pink-400 to-purple-500 h-3 rounded-full pulse-animation" style="width: 80%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium">💪 TRX 懸吊訓練</span>
+                                    <span class="text-sm font-bold bg-white bg-opacity-20 px-2 py-1 rounded-full">6/8 人</span>
+                                </div>
+                                <div class="w-full bg-white bg-opacity-20 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-orange-400 to-red-500 h-3 rounded-full pulse-animation" style="width: 75%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium">🚴‍♂️ 飛輪有氧</span>
+                                    <span class="text-sm font-bold bg-white bg-opacity-20 px-2 py-1 rounded-full">12/15 人</span>
+                                </div>
+                                <div class="w-full bg-white bg-opacity-20 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-blue-400 to-cyan-500 h-3 rounded-full pulse-animation" style="width: 80%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Log -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">出席記錄</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">學生</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">課程</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">簽到時間</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">簽退時間</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-purple-500 flex items-center justify-center text-white text-sm font-medium">李</div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">李美華</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">瑜珈基礎班 - 第4堂</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">14:05</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">16:00</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">已完成</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">張</div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">張小華</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TRX 懸吊訓練 - 第3堂</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">16:10</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">進行中</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Tab -->
+            <div id="calendar" class="tab-content">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-900">課程行事曆</h2>
+                        <div class="flex space-x-2">
+                            <select class="border-gray-300 rounded-md text-sm">
+                                <option>所有課程</option>
+                                <option>瑜珈基礎班</option>
+                                <option>TRX 懸吊訓練</option>
+                                <option>飛輪有氧</option>
+                            </select>
+                            <select class="border-gray-300 rounded-md text-sm">
+                                <option>所有教練</option>
+                                <option>王美麗</option>
+                                <option>陳教練</option>
+                                <option>李強</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar View -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                        <h3 class="text-lg font-medium text-gray-900">2024年3月</h3>
+                        <div class="flex space-x-2">
+                            <button class="p-2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="p-2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="calendar-grid mb-4">
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">日</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">一</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">二</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">三</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">四</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">五</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">六</div>
+                        </div>
+                        <div class="calendar-grid">
+                            <!-- Calendar days would be generated here -->
+                            <div class="p-2 h-24 border border-gray-100"></div>
+                            <div class="p-2 h-24 border border-gray-100"></div>
+                            <div class="p-2 h-24 border border-gray-100"></div>
+                            <div class="p-2 h-24 border border-gray-100"></div>
+                            <div class="p-2 h-24 border border-gray-100"></div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">1</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">2</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">3</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">4</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">5</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">6</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">7</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">8</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">9</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">10</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">11</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">12</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">13</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100">
+                                <div class="text-sm font-medium">14</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100 bg-pink-50">
+                                <div class="text-sm font-medium">15</div>
+                                <div class="text-xs bg-pink-500 text-white px-1 py-0.5 rounded mt-1">瑜珈 14:00</div>
+                            </div>
+                            <div class="p-2 h-24 border border-gray-100 bg-orange-50">
+                                <div class="text-sm font-medium">16</div>
+                                <div class="text-xs bg-orange-500 text-white px-1 py-0.5 rounded mt-1">TRX 16:00</div>
+                                <div class="text-xs bg-blue-500 text-white px-1 py-0.5 rounded mt-1">飛輪 18:00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Makeup Tab -->
+            <div id="makeup" class="tab-content">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">補課管理</h2>
+                </div>
+
+                <!-- Makeup Requests -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">待審核補課申請</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">李美華</h4>
+                                        <p class="text-sm text-gray-500">瑜珈基礎班 - 第3堂</p>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">待審核</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">請假原因：身體不適，無法參加課程</p>
+                                <p class="text-sm text-gray-500 mb-3">申請日期：2024-03-14</p>
+                                <div class="flex space-x-2">
+                                    <button onclick="approveMakeup(1)" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">批准</button>
+                                    <button onclick="rejectMakeup(1)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">拒絕</button>
+                                </div>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">張小華</h4>
+                                        <p class="text-sm text-gray-500">TRX 懸吊訓練 - 第2堂</p>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">待審核</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">請假原因：臨時工作會議衝突</p>
+                                <p class="text-sm text-gray-500 mb-3">申請日期：2024-03-13</p>
+                                <div class="flex space-x-2">
+                                    <button onclick="approveMakeup(2)" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">批准</button>
+                                    <button onclick="rejectMakeup(2)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">拒絕</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">補課時段安排</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">選擇課程</label>
+                                    <select class="w-full border-gray-300 rounded-md">
+                                        <option>瑜珈基礎班</option>
+                                        <option>TRX 懸吊訓練</option>
+                                        <option>飛輪有氧</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">補課日期</label>
+                                    <input type="date" class="w-full border-gray-300 rounded-md">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">補課時間</label>
+                                    <select class="w-full border-gray-300 rounded-md">
+                                        <option>09:00 - 11:00</option>
+                                        <option>14:00 - 16:00</option>
+                                        <option>16:00 - 18:00</option>
+                                    </select>
+                                </div>
+                                <button onclick="scheduleMakeup()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium">
+                                    安排補課
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transfer Tab -->
+            <div id="transfer" class="tab-content">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">轉讓管理</h2>
+                </div>
+
+                <!-- Transfer Requests -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">轉讓申請記錄</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">轉讓人</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">接收人</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">課程</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">堂數</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-purple-500 flex items-center justify-center text-white text-sm font-medium">李</div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">李美華</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">王</div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">王大明</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">瑜珈基礎班</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">3 堂</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">待確認</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button onclick="approveTransfer(1)" class="text-green-600 hover:text-green-900 mr-3">批准</button>
+                                        <button onclick="rejectTransfer(1)" class="text-red-600 hover:text-red-900">拒絕</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-medium">張</div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">張小華</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center text-white text-sm font-medium">陳</div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">陳小美</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TRX 懸吊訓練</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">5 堂</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">已完成</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <span class="text-gray-400">已處理</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Tab -->
+            <div id="payment" class="tab-content">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">付款管理</h2>
+                </div>
+
+                <!-- Payment Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100">
+                                <i class="fas fa-dollar-sign text-green-600"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">總收入</p>
+                                <p class="text-2xl font-semibold text-gray-900">NT$ 156,800</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100">
+                                <i class="fas fa-shopping-cart text-blue-600"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">本月訂單</p>
+                                <p class="text-2xl font-semibold text-gray-900">42</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100">
+                                <i class="fas fa-clock text-yellow-600"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">待處理退款</p>
+                                <p class="text-2xl font-semibold text-gray-900">3</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-100">
+                                <i class="fas fa-chart-line text-purple-600"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">平均訂單金額</p>
+                                <p class="text-2xl font-semibold text-gray-900">NT$ 3,733</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">最近訂單</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">訂單編號</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">客戶</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">課程</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金額</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#ORD001234</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-purple-500 flex items-center justify-center text-white text-sm font-medium">李</div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">李美華</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">瑜珈基礎班</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">NT$ 3,600</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">已付款</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button onclick="viewInvoice(1)" class="text-blue-600 hover:text-blue-900">查看發票</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#ORD001235</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">張</div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">張小華</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TRX 懸吊訓練</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">NT$ 4,000</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">處理中</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button onclick="processPayment(2)" class="text-green-600 hover:text-green-900">處理付款</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Tab -->
+            <div id="notifications" class="tab-content">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">通知設定</h2>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Notification Settings -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">通知偏好設定</h3>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900 mb-3">電子郵件通知</h4>
+                                <div class="space-y-3">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600" checked>
+                                        <span class="ml-2 text-sm text-gray-700">新用戶註冊</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600" checked>
+                                        <span class="ml-2 text-sm text-gray-700">課程報名</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600">
+                                        <span class="ml-2 text-sm text-gray-700">付款完成</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900 mb-3">LINE 通知</h4>
+                                <div class="space-y-3">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded border-gray-300 text-green-600" checked>
+                                        <span class="ml-2 text-sm text-gray-700">課程提醒</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded border-gray-300 text-green-600">
+                                        <span class="ml-2 text-sm text-gray-700">補課通知</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900 mb-3">SMS 通知</h4>
+                                <div class="space-y-3">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded border-gray-300 text-purple-600">
+                                        <span class="ml-2 text-sm text-gray-700">緊急通知</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded border-gray-300 text-purple-600">
+                                        <span class="ml-2 text-sm text-gray-700">課程取消</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button onclick="saveNotificationSettings()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium">
+                                儲存設定
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notification History -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">通知記錄</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <i class="fas fa-envelope text-blue-600 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">新用戶註冊通知</p>
+                                        <p class="text-sm text-gray-500">李美華 已成功註冊帳號</p>
+                                        <p class="text-xs text-gray-400">2024-03-15 10:30</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                                            <i class="fab fa-line text-green-600 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">課程提醒</p>
+                                        <p class="text-sm text-gray-500">基礎程式設計課程將於1小時後開始</p>
+                                        <p class="text-xs text-gray-400">2024-03-15 13:00</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                                            <i class="fas fa-sms text-purple-600 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">付款確認</p>
+                                        <p class="text-sm text-gray-500">張小華 已完成課程付款</p>
+                                        <p class="text-xs text-gray-400">2024-03-14 16:45</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Create User Modal -->
+    <div id="createUserModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">新增用戶</h3>
+                    <button onclick="closeModal('createUserModal')" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                        <input type="text" class="w-full border-gray-300 rounded-md" placeholder="輸入姓名">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">電子郵件</label>
+                        <input type="email" class="w-full border-gray-300 rounded-md" placeholder="輸入電子郵件">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">角色</label>
+                        <select class="w-full border-gray-300 rounded-md">
+                            <option value="student">學生</option>
+                            <option value="coach">教練</option>
+                            <option value="admin">管理員</option>
+                        </select>
+                    </div>
+                    <div id="coachTypeSection" style="display: none;">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">教練類型</label>
+                        <select class="w-full border-gray-300 rounded-md">
+                            <option value="school">學校教練</option>
+                            <option value="independent">獨立教練</option>
+                            <option value="project">專案教練</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">密碼</label>
+                        <input type="password" class="w-full border-gray-300 rounded-md" placeholder="輸入密碼">
+                    </div>
+                    <div class="flex justify-end space-x-2 pt-4">
+                        <button type="button" onclick="closeModal('createUserModal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                            取消
+                        </button>
+                        <button type="submit" onclick="createUser(event)" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                            新增
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Course Modal -->
+    <div id="createCourseModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-10 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">新增課程</h3>
+                    <button onclick="closeModal('createCourseModal')" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">課程標題</label>
+                        <input type="text" class="w-full border-gray-300 rounded-md" placeholder="輸入課程標題">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">課程描述</label>
+                        <textarea class="w-full border-gray-300 rounded-md" rows="3" placeholder="輸入課程描述"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">堂數</label>
+                            <input type="number" class="w-full border-gray-300 rounded-md" placeholder="12">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">價格</label>
+                            <input type="number" class="w-full border-gray-300 rounded-md" placeholder="3600">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">指派教練</label>
+                        <select class="w-full border-gray-300 rounded-md">
+                            <option>選擇教練</option>
+                            <option>王美麗</option>
+                            <option>陳教練</option>
+                            <option>李強</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">課程時間表</label>
+                        <div class="space-y-2">
+                            <div class="flex space-x-2">
+                                <select class="flex-1 border-gray-300 rounded-md text-sm">
+                                    <option>星期一</option>
+                                    <option>星期二</option>
+                                    <option>星期三</option>
+                                    <option>星期四</option>
+                                    <option>星期五</option>
+                                    <option>星期六</option>
+                                    <option>星期日</option>
+                                </select>
+                                <input type="time" class="border-gray-300 rounded-md text-sm" value="14:00">
+                                <input type="time" class="border-gray-300 rounded-md text-sm" value="16:00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-2 pt-4">
+                        <button type="button" onclick="closeModal('createCourseModal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                            取消
+                        </button>
+                        <button type="submit" onclick="createCourse(event)" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                            新增課程
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Check-in Modal -->
+    <div id="checkinModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">QR Code 簽到</h3>
+                    <button onclick="closeModal('checkinModal')" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="text-center">
+                    <div class="w-48 h-48 mx-auto bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                        <div class="text-center">
+                            <i class="fas fa-qrcode text-4xl text-gray-400 mb-2"></i>
+                            <p class="text-sm text-gray-500">QR Code 掃描區域</p>
+                            <p class="text-xs text-gray-400 mt-1">請將QR Code對準此區域</p>
+                        </div>
+                    </div>
+                    <button onclick="simulateQRScan()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium">
+                        模擬掃描
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="notification bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+        <div class="flex items-center">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span id="toastMessage">操作成功！</span>
+        </div>
+    </div>
+
+    <script>
+        // Tab Management
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => btn.classList.remove('bg-blue-100', 'text-blue-700'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('bg-blue-100', 'text-blue-700');
+        }
+
+        // Modal Management
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            
+            // Set color based on type
+            toast.className = 'notification px-6 py-3 rounded-lg shadow-lg';
+            if (type === 'success') {
+                toast.classList.add('bg-green-500', 'text-white');
+            } else if (type === 'error') {
+                toast.classList.add('bg-red-500', 'text-white');
+            } else if (type === 'warning') {
+                toast.classList.add('bg-yellow-500', 'text-white');
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // User Management Functions
+        function updateUserRole(select) {
+            const role = select.value;
+            showToast(`用戶角色已更新為 ${role === 'student' ? '學生' : role === 'coach' ? '教練' : '管理員'}`);
+        }
+
+        function editUser(userId) {
+            showToast('編輯用戶功能開發中...');
+        }
+
+        function deleteUser(userId) {
+            if (confirm('確定要刪除此用戶嗎？')) {
+                showToast('用戶已刪除');
+            }
+        }
+
+        function createUser(event) {
+            event.preventDefault();
+            showToast('新用戶已成功建立');
+            closeModal('createUserModal');
+        }
+
+        // Course Management Functions
+        function viewCourse(courseId) {
+            showToast('查看課程詳情...');
+        }
+
+        function editCourse(courseId) {
+            showToast('編輯課程功能開發中...');
+        }
+
+        function createCourse(event) {
+            event.preventDefault();
+            showToast('新課程已成功建立');
+            closeModal('createCourseModal');
+        }
+
+        // Attendance Functions
+        function manualCheckin() {
+            showToast('學生簽到成功！');
+        }
+
+        function simulateQRScan() {
+            showToast('QR Code 掃描成功，學生已簽到！');
+            closeModal('checkinModal');
+        }
+
+        // Makeup Class Functions
+        function approveMakeup(requestId) {
+            showToast('補課申請已批准');
+        }
+
+        function rejectMakeup(requestId) {
+            showToast('補課申請已拒絕', 'warning');
+        }
+
+        function scheduleMakeup() {
+            showToast('補課時段已安排');
+        }
+
+        // Transfer Functions
+        function approveTransfer(transferId) {
+            showToast('轉讓申請已批准');
+        }
+
+        function rejectTransfer(transferId) {
+            showToast('轉讓申請已拒絕', 'warning');
+        }
+
+        // Payment Functions
+        function viewInvoice(orderId) {
+            showToast('正在開啟發票...');
+        }
+
+        function processPayment(orderId) {
+            showToast('付款處理中...');
+        }
+
+        // Notification Functions
+        function saveNotificationSettings() {
+            showToast('通知設定已儲存');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set first tab as active
+            showTab('users');
+            
+            // Handle role selection in create user modal
+            const roleSelect = document.querySelector('#createUserModal select');
+            if (roleSelect) {
+                roleSelect.addEventListener('change', function() {
+                    const coachTypeSection = document.getElementById('coachTypeSection');
+                    if (this.value === 'coach') {
+                        coachTypeSection.style.display = 'block';
+                    } else {
+                        coachTypeSection.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'978ace7463cd4a8b',t:'MTc1Njc5MzAzMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
