@@ -136,8 +136,8 @@
 </head>
 <body>
     <div class="navbar">
-        <a href="#" onclick="goHome(event)">返回首頁</a>
         <span class="title">🔮 生命靈數計算</span>
+        <a href="#" onclick="goHome(event)">返回首頁</a>
     </div>
     <div class="container">
         <div class="calc-box">
@@ -156,9 +156,9 @@
         function goHome(e) {
             e.preventDefault();
             if (window.top !== window.self) {
-                window.top.location.href = 'index.html';
+                window.top.showFrame('about.html');
             } else {
-                window.location.href = 'index.html';
+                window.location.href = 'about.html';
             }
         }
 

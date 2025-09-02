@@ -113,8 +113,8 @@
 </head>
 <body>
     <div class="navbar">
-        <a href="#" onclick="goHome(event)">返回首頁</a>
         <span class="title">🧮 計算機</span>
+        <a href="#" onclick="goHome(event)">返回首頁</a>
     </div>
     <div class="calc-container">
         <div id="display" class="calc-display">0</div>
@@ -148,9 +148,9 @@
         function goHome(e) {
             e.preventDefault();
             if (window.top !== window.self) {
-                window.top.location.href = 'index.html';
+                window.top.showFrame('about.html');
             } else {
-                window.location.href = 'index.html';
+                window.location.href = 'about.html';
             }
         }
         let display = document.getElementById('display');
